@@ -1,0 +1,152 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h1>List Orders</h1>
+<div>
+    <form>
+        <input type="date" id="from" placeholder="From Date" />
+        <input type="date" id="to" placeholder="To Date" />
+        <button type="button" id="btnSearch">Search</button>
+    </form>
+</div>
+<div style="font-weight:bold;" id="msg"></div>
+<div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>OrderId</th>
+                <th>CustomerId</th>
+                <th>CustomerName</th>
+                <th>EmployeeId</th>
+                <th>EmployeeName</th>
+                <th>EmployeeDepartmentName</th>
+                <th>OrderDate</th>
+                <th>Freight</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script>
+
+    document.addEventListener("DOMContentLoaded", () => {
+        showAllOrder();
+        $("#btnSearch").on("click", () => {
+              $("#msg").text("");
+            showOrderByDate();
+        });
+        deleteCustomer();
+    });
+
+    function showAllOrder() {
+        $.ajax({
+            url: "https://localhost:5000/api/Order/GetAllOrder",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                $.each(data, function (i, order) {
+                    var newRow = `<tr>
+                                                    <td>
+                                                            ${order.orderId}
+                                                    </td>
+                                                    <td>
+                                                            ${order.customerId}
+                                                    </td>
+                                                    <td>
+                                                            ${order.customerName} <a name="delete" id="${order.customerId}" href="#">DeleteCustomer</a>
+                                                    </td>
+                                                    <td>
+                                                                ${order.employeeId}
+                                                    </td>
+                                                    <td>
+                                                                ${order.employeeName}
+                                                    </td>
+                                                    <td>
+                                                                ${order.employeeDepartmentName}
+                                                    </td>
+                                                    <td>
+                                                                ${order.orderDate}
+                                                    </td>
+                                                    <td>
+                                                                ${order.freight}
+                                                    </td>
+
+                                                </tr>`;
+                    $("table tbody").append(newRow);
+                });
+            }
+        });
+    };
+
+    function deleteCustomer() {
+        $("table").on("click", "a[name=delete]", function () {
+            let customerId = $(this).prop("id");
+            $.ajax({
+                url: "https://localhost:5000/api/Customer/Delete/" + customerId,
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    let text = `You have deleted ${data.customerDeleteCount} customer(s), ${data.orderDeleteCount} order(s) and ${data.orderDetailDeleteCount} order detail(s)`;
+                    $("#msg").text(text);
+                    $("table tbody").html("");
+                    if (!$("#from").val() || !$("#to").val()) {
+                        showAllOrder();
+                    } else {
+                        showOrderByDate();
+                    }
+                }
+            });
+        });
+    }
+
+    function showOrderByDate() {
+        let dateFrom = $("#from").val();
+        let dateTo = $("#to").val();
+        if (!$("#from").val() || !$("#to").val()) {
+            showAllOrder();
+        } else {
+            $.ajax({
+                url: "https://localhost:5000/api/Order/GetOrderByDate/" + dateFrom + "/" + dateTo,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    $("table tbody").html("");
+                    $.each(data, function (i, order) {
+                        var newRow = `<tr>
+                                                            <td>
+                                                                    ${order.orderId}
+                                                            </td>
+                                                            <td>
+                                                                    ${order.customerId}
+                                                            </td>
+                                                            <td>
+                                                                    ${order.customerName} <a name="delete" id="${order.customerId}" href="#">DeleteCustomer</a>
+                                                            </td>
+                                                            <td>
+                                                                        ${order.employeeId}
+                                                            </td>
+                                                            <td>
+                                                                        ${order.employeeName}
+                                                            </td>
+                                                            <td>
+                                                                        ${order.employeeDepartmentName}
+                                                            </td>
+                                                            <td>
+                                                                        ${order.orderDate}
+                                                            </td>
+                                                            <td>
+                                                                        ${order.freight}
+                                                            </td>
+
+                                                        </tr>`;
+                        $("table tbody").append(newRow);
+                    });
+                }
+            });
+        }
+    };
+</script>
